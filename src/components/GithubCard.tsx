@@ -2,6 +2,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Card, CardActionArea, CardMedia, CardActions, CardContent, Button, Typography, Link } from "@material-ui/core";
 import GithubData from "../models/githubData";
+import { useHistory } from "react-router-dom";
 
 interface CardProps {
   cardData: GithubData;
@@ -10,11 +11,16 @@ interface CardProps {
 
 export default function GithubCard(props: CardProps) {
   const classes = useStyles();
+  const history = useHistory();
   const preventDefault = (event: React.SyntheticEvent) => event.preventDefault();
+
+  const redirectToDetailPage = () => {
+    history.push(`/details/${props.cardData.login}`);
+  };
 
   return (
     <Card className={classes.root}>
-      <CardActionArea onClick={() => props.goToDetailPage()}>
+      <CardActionArea onClick={redirectToDetailPage}>
         <CardMedia className={classes.media} image={props.cardData.avatar_url} title={props.cardData.login} />
         <CardContent>
           <Typography gutterBottom variant="h5" component="h2">

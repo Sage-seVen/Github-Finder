@@ -3,19 +3,30 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
 import { Button, TextField } from "@material-ui/core";
 import GithubCard from "../components/GithubCard";
 import GithubData from "../models/githubData";
+import DetailsPage from "./DetailsPage";
 
 function HomePage(props: any) {
   const [userName, setUserName] = useState("");
-  const [currentGithubData, setCurrentGithubData] = useState<GithubData>();
+  const [currentGithubData, setCurrentGithubData] = useState<GithubData[]>([]);
   const [isDetailsPage, setIsDetailsPage] = useState(false);
 
+  //this useEffect is run only on component render, setting local state from browser Storage for persistency
   useEffect(() => {
     let storageObject = localStorage.getItem("githubUserData");
     if (storageObject) {
-      setCurrentGithubData(JSON.parse(storageObject));
+      let parsedStorageObject = JSON.parse(storageObject) as GithubData[];
+      if (parsedStorageObject.length > currentGithubData.length) {
+        //console.log("got item from storage and setting react state");
+        setCurrentGithubData(JSON.parse(storageObject));
+      }
     }
-    console.log(storageObject);
+    console.log(currentGithubData);
   }, []);
+
+  //this useeffect is run every time State changes and it updates the local storage
+  useEffect(() => {
+    localStorage.setItem("githubUserData", JSON.stringify(currentGithubData));
+  }, [currentGithubData]);
 
   const handleUserNameChange = (e: any) => {
     console.log("Setting UserName");
@@ -34,16 +45,19 @@ function HomePage(props: any) {
         if (res.ok) {
           console.log("Response Fetched");
         } else {
-          //show popup here
+          //Showing Popup for Bad Response
           window.alert("User Not Found");
         }
         return res.json();
       })
       .then((data) => {
         console.log(data);
-        setCurrentGithubData(data);
-        console.log(currentGithubData);
-        localStorage.setItem("githubUserData", JSON.stringify(data));
+
+        //takes existing array of currentGithubData and appends data to it
+        setCurrentGithubData((currentGithubData) => [...currentGithubData, data]);
+
+        //commenting this out, as setting storage in useEffect
+        //localStorage.setItem("githubUserData", JSON.stringify(currentGithubData));
       });
   };
 
@@ -54,11 +68,12 @@ function HomePage(props: any) {
         Search
       </Button>
       {currentGithubData ? (
-        <GithubCard cardData={currentGithubData} goToDetailPage={handleisDetailsStateChange} />
+        currentGithubData.map((data, index) => (
+          <GithubCard key={index.toString()} cardData={data} goToDetailPage={handleisDetailsStateChange} />
+        ))
       ) : (
         <div>Please Search Something</div>
       )}
-      <div>{JSON.stringify(currentGithubData)}</div>
     </div>
   );
 }
